@@ -1,9 +1,10 @@
 var cnv;
 let grid;
 let rows, cols;
-let w = 4;
+let w = 5;
 let xoff, yoff;
 let zoff = 0;
+var noiseView, lineView;
 
 function setup() {
   colorMode(HSB);
@@ -13,6 +14,12 @@ function setup() {
   rows = height / w;
   cols = width / w;
   grid = [];
+  noiseView = createCheckbox("noise", true);
+  noiseView.class("checkbox");
+  noiseView.position(windowWidth/2+30);
+  lineView = createCheckbox("lines", true);
+  lineView.class("checkbox");
+  lineView.position(windowWidth/2-30);
   for (let i = 0; i <= rows+1; i++) {
     grid[i] = [];
     for (let j = 0; j <= cols+1; j++) {
@@ -37,8 +44,7 @@ function makeLine(grid, i, j) {
   const d = createVector((i*w), (j*w)+w/2);
   const res = getCase(grid, j, i);
   // text(res.toFixed(2), i*w, j*w);
-  // const lineColor = color(map(noise(xoff, yoff), 0, 1, 0, 100), 100, 100);
-  const lineColor = 150;
+  const lineColor = color(map(i*w, 0, width, 0, 300), 100, 100);
   textSize(20);
   noStroke();
   fill(lineColor);
@@ -115,16 +121,23 @@ function draw() {
   zoff += 0.003;
   for (let i = 0; i <= cols; i++) {
     for (let j = 0; j <= rows; j++) {
-      stroke(grid[j][i]*50);
-      strokeWeight(6);
-      point(i*w, j*w);
+      if (noiseView.checked()) {
+        let state = grid[j][i];
+        // stroke((state-1)*-100);
+        noStroke();
+        fill(map(i*w, 0, width, 0, 300), 100, (state-1)*-100);
+        square(i*w, j*w, w);
+      }
     }
   }
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
-      makeLine(grid, i, j);
+      if (lineView.checked()) {
+        makeLine(grid, i, j);
+      }
     }
   }
   noFill();
+  stroke(255);
   rect(0, 0, width, height);
 }

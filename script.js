@@ -1,31 +1,41 @@
 var cnv;
 let grid;
 let rows, cols;
-let w = 5;
+let w = 20;
 let xoff, yoff;
 let zoff = 0;
-var noiseView, lineView;
+var noiseView, lineView, wSlider, rgbView;
+let scale = 1;
 
-function setup() {
-  colorMode(HSB);
-  cnv = createCanvas(windowWidth-100, windowHeight-100);
-  cnv.position((windowWidth-width)/2, (windowHeight-height)/2);
-  textSize(6);
-  rows = height / w;
-  cols = width / w;
+function setupGrid() {
   grid = [];
-  noiseView = createCheckbox("noise", true);
-  noiseView.class("checkbox");
-  noiseView.position(windowWidth/2+30);
-  lineView = createCheckbox("lines", true);
-  lineView.class("checkbox");
-  lineView.position(windowWidth/2-30);
+  cols = width/wSlider.value();
+  rows = height/wSlider.value();
   for (let i = 0; i <= rows+1; i++) {
     grid[i] = [];
     for (let j = 0; j <= cols+1; j++) {
       grid[i].push(random(2));
     }
   }
+}
+
+function setup() {
+  colorMode(HSB);
+  cnv = createCanvas(windowWidth-100, windowHeight-100);
+  cnv.position((windowWidth-width)/2, (windowHeight-height)/2);
+  textSize(6);
+  wSlider = createSlider(3, 20, 10, 0.01);
+  setupGrid();
+  noiseView = createCheckbox("noise", false);
+  noiseView.class("checkbox");
+  noiseView.position(windowWidth/2+60);
+  lineView = createCheckbox("lines", true);
+  lineView.class("checkbox");
+  lineView.position(windowWidth/2-60);
+  rgbView = createCheckbox("rgb", false);
+  rgbView.class("checkbox");
+  rgbView.position(windowWidth/2);
+  
   // noiseDetail(8, 0.7);
 }
 
@@ -42,9 +52,18 @@ function makeLine(grid, i, j) {
   const b = createVector((i*w)+w, (j*w)+w/2);
   const c = createVector((i*w)+w/2, (j*w)+w);
   const d = createVector((i*w), (j*w)+w/2);
+  a.mult(scale);
+  b.mult(scale);
+  c.mult(scale);
+  d.mult(scale);
   const res = getCase(grid, j, i);
   // text(res.toFixed(2), i*w, j*w);
-  const lineColor = color(map(i*w, 0, width, 0, 300), 100, 100);
+  let lineColor; 
+  if (rgbView.checked()) {
+    lineColor = color(map(i*w, 0, width, 0, 300), 100, 100);
+  } else {
+    lineColor = 255;
+  }
   textSize(20);
   noStroke();
   fill(lineColor);
@@ -107,6 +126,10 @@ function makeLine(grid, i, j) {
 
 function draw() {
   background(0);
+  if (w != wSlider.value()) {
+    w = wSlider.value();
+    setupGrid();
+  }
   xoff = 0;
   for (let i = 0; i <= cols; i++) {
     xoff += 0.1;
@@ -118,15 +141,19 @@ function draw() {
       // text(grid[j][i].toFixed(3), i*w, j*w);
     }
   }
-  zoff += 0.003;
+  zoff += 0.006;
   for (let i = 0; i <= cols; i++) {
     for (let j = 0; j <= rows; j++) {
       if (noiseView.checked()) {
         let state = grid[j][i];
         // stroke((state-1)*-100);
         noStroke();
-        fill(map(i*w, 0, width, 0, 300), 100, (state-1)*-100);
-        square(i*w, j*w, w);
+        if (rgbView.checked()) {
+          fill(map(i*w, 0, width, 0, 300), 100, (state-1)*-100);
+        } else {
+          fill((state-1)*-100);
+        }
+        square(i*w*scale, j*w*scale, w*scale);
       }
     }
   }
